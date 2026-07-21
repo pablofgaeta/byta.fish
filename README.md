@@ -16,6 +16,45 @@ fisher:
 fisher install pablofgaeta/byta.fish
 ```
 
+## Quickstart
+
+For long-term projects, configure `BYTA_PROFILE` to be set in your shell (e.g. via [`direnv`](https://direnv.net/)).
+
+For running one-off commands in a different context, use `byta run <profile> -- <cmd> ...`.
+
+For running a few commands in a different context, use `byta shell <profile>` and exit when finished to return to the parent shell.
+
+Example usage:
+
+```fish
+# Set an ambient profile for the whole session
+set -gx BYTA_PROFILE cymbal
+
+# Authenticate with "cymbal", the active profile
+gcloud auth login
+
+# List GCS blobs in a path with a different profile
+byta run other -- gcloud storage ls gs://<path>
+
+# List profiles; a `*` marks the active one, "cymbal"
+byta list
+
+# Drop into a sub-shell scoped to a profile; `exit` to return
+byta shell other
+
+# All scoped to the "other" profile
+gcloud auth login
+gcloud auth application-default login
+gcloud config set project other-project
+
+# Return to parent shell with "cymbal" profile active
+exit
+
+# Delete a profile you no longer need (prompts for confirmation)
+byta delete cymbal
+byta delete other
+```
+
 ## Usage
 
 This plugin has two modes:
@@ -31,21 +70,13 @@ Commands:
 
 | Command                     | Aliases        | Description                                                                                       |
 | --------------------------- | -------------- | ------------------------------------------------------------------------------------------------ |
-| `byta list`                 | `ls`           | List available profiles. A `*` marks the profile named by `$BYTA_PROFILE`.                        |
+| `byta list`                 | `ls`           | List available profiles. A `*` marks the active profile.                        |
 | `byta delete <profile>`     | `rm`           | Delete a profile's config directory (prompts for confirmation).                                  |
 | `byta run [<profile>] -- …` |                | Run a command under `<profile>`, scoped to that command. Defaults to `$BYTA_PROFILE` if omitted.  |
 | `byta shell [<profile>]`    |                | Start an interactive sub-shell under `<profile>`. Defaults to `$BYTA_PROFILE` if omitted.         |
 | `byta help`                 | `-h`, `--help` | Show usage.                                                                                       |
 
 Profiles live in `$XDG_CONFIG_HOME/byta/<profile>` (default `~/.config/byta/<profile>`), used as the `gcloud` config directory (`CLOUDSDK_CONFIG`) with ADC stored at `application_default_credentials.json` inside it.
-
-## Recommended Workflow
-
-For long-term projects, configure `BYTA_PROFILE` to be set in your shell (e.g. via [`direnv`](https://direnv.net/)).
-
-For running one-off commands in a different context, use `byta run <profile> -- [...CMD]` (e.g. `byta run cymbal -- gcloud auth application-default login`).
-
-For running a few commands in a different context, use `byta shell <profile>` and exit when finished to return to the parent shell.
 
 ## Motivation
 
@@ -67,5 +98,5 @@ The `gcloud` CLI offers configuration management via `gcloud config configuratio
 
 1. Switching profiles is slow due to the need to re-authenticate and validate the new configuration.
 
-The plugin essentially just automates running `CLOUDSDK_CONFIG=<path> GOOGLE_APPLICATION_CREDENTIALS=<path> ...CMD`,
+The plugin essentially just automates running `CLOUDSDK_CONFIG=<path> GOOGLE_APPLICATION_CREDENTIALS=<path> <cmd> ...`,
 but offers a simple interface for different common scenarios and automatic context switching.
