@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Tests (fishtape)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install fish shell
+        uses: fish-shop/install-fish-shell@v2
+
+      - name: Run fishtape tests
+        uses: fish-shop/run-fishtape-tests@v2
+        with:
+          patterns: tests/*.fish
+
+  lint:
+    name: Lint (rumdl)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Markdown
+        uses: rvben/rumdl@v0
+        with:
+          # MD013 (line length) is disabled: the docs are written one sentence per line.
+          args: --extend-disable MD013
